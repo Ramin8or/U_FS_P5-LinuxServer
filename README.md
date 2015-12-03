@@ -83,7 +83,7 @@ Save the file, and restart SSH:
 ```
 service ssh restart
 ```
-**Do not logout of root yet, use another terminal to SSH using the grader account:**
+**Do not logout of root yet!** Use another terminal to SSH using the grader account:
 ```
 ssh -p 2200 grader@`[IP_ADDRESS](52.33.77.87)
 ```
@@ -122,14 +122,47 @@ Now you should be able to login to the server using:
 ssh -p 2200 -i ~/.ssh/u_p5_rsa grader@IP_ADDRESS
 ```
 
-###  UFW
-Configure the Uncomplicated Firewall (UFW) to only allow incoming connections for SSH (port 2200), HTTP (port 80), and NTP (port 123)
+###  Configure the Uncomplicated Firewall (UFW) 
+The goal is to only allow incoming connections for SSH (port 2200), HTTP (port 80), and NTP (port 123). I used the following commands
+provided in [Ubuntu Community Docs](https://help.ubuntu.com/community/UFW). 
+First I enabled ufw with the default rules. Then modified them as follows:
+```
+sudo ufw enable
+sudo ufw allow 2200/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 123/udp
+```
 
 ## Install your application
 
 ###  Install Apache, Python, and PostgreSQL
-Install and configure Apache to serve a Python mod_wsgi application
-Install and configure PostgreSQL:
+
+####  Install and configure Apache to serve a Python mod_wsgi application
+Install Apache web server:
+```
+sudo apt-get install apache2
+```
+Navigate to your [IP_ADDRESS](http://52.33.77.87) on your local machine to make sure the web server is serving. 
+You should see 'It works!' on top of the web page.
+
+
+Install MOD_WSGI for serving Python applications from Apache web server:
+```
+sudo apt-get install libapache2-mod-wsgi
+```
+Finally, restart the Apache web server in order to load MOD_WSGI:
+```
+sudo service apache2 restart
+```
+
+####  Install and configure PostgreSQL
+Use the following command to install Postgre:
+```
+sudo apt-get install postgresql
+```
+Since we are installing the web server and database server on the same machine, there is no need to modify any firewall settings. 
+The web server will communicate with the database via an internal mechanism that does not cross the boundaries of the firewall. 
+
 Do not allow remote connections
 Create a new user named catalog that has limited permissions to your catalog application database
 
