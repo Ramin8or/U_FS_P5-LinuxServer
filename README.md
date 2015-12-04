@@ -49,6 +49,7 @@ First update, then upgrade with the following two commands:
 apt-get update
 apt-get upgrade
 ```
+**Note:** You will have to confirm “yes” when running the upgrade command.
 
 ###  Configure the local timezone to UTC
 [From Ubuntu Community:](https://help.ubuntu.com/community/UbuntuTime#Using_the_Command_Line_.28unattended.29)
@@ -145,26 +146,73 @@ sudo apt-get install apache2
 Navigate to your [IP_ADDRESS](http://52.33.77.87) on your local machine to make sure the web server is serving. 
 You should see 'It works!' on top of the web page.
 
-
-Install MOD_WSGI for serving Python applications from Apache web server:
+According to [this Udacity blog](http://blog.udacity.com/2015/03/step-by-step-guide-install-lamp-linux-apache-mysql-python-ubuntu.html)
+there is an additional step to ensure that Apache and Python play well together nicely: installing a tool called **mod_wsgi**. 
+This is free tool for serving Python applications from Apache server. We will also be installing a helper package called **python-setuptools**.
 ```
-sudo apt-get install libapache2-mod-wsgi
+sudo apt-get install python-setuptools libapache2-mod-wsgi
 ```
-Finally, restart the Apache web server in order to load MOD_WSGI:
+Now is the time to restart the Apache web server in order to load mod_wsgi:
 ```
 sudo service apache2 restart
 ```
+Use the information from [this answer](http://askubuntu.com/questions/256013/could-not-reliably-determine-the-servers-fully-qualified-domain-name) 
+to eliminate the friendly warning when restarting Apache: 
+```
+sudo nano /etc/apache2/apache2.conf
+```
+And add the following at the end of this file:
+```
+# Introduce a servername to eliminate friendly warning
+ServerName localhost
+```
 
 ####  Install and configure PostgreSQL
-Use the following command to install Postgre:
+I used [this tutorial from DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps)
+to install and secure PostgreSQL. First install Postgre:
 ```
-sudo apt-get install postgresql
+sudo apt-get install postgresql postgresql-contrib
+```
+At this point, PostgreSQL has created a new user that you can use to connect to the database server as follows:
+```
+sudo su - postgres
+psql
+```
+To exit:
+```
+\q
+exit
 ```
 Since we are installing the web server and database server on the same machine, there is no need to modify any firewall settings. 
 The web server will communicate with the database via an internal mechanism that does not cross the boundaries of the firewall. 
 
-Do not allow remote connections
-Create a new user named catalog that has limited permissions to your catalog application database
+##### Do not allow remote connections
+By default remote connections are not allowed. You can verify that by opening this file:
+```
+sudo nano /etc/postgresql/9.3/main/pg_hba.conf
+```
+and verifying that using [this article](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps).
+
+##### Create a new user named catalog that has limited permissions to your catalog application database
+First create the new user:
+'''
+sudo adduser catalog
+'''
+Then switch to postgre user and connect to the database system:
+```
+sudo su - postgres
+psql
+```
+Use the following commands to create catalog user and give it roles in the database system:
+```
+CREATE USER catalog WITH PASSWORD 'password';
+ALTER USER catalog CREATEDB;
+```
+To see the affects of these commands type `\du` then exit and logout of the postgre account:
+```
+\q
+exit
+```
 
 ###  Install Git
 
