@@ -195,9 +195,9 @@ and verifying that using [this article](https://www.digitalocean.com/community/t
 
 ##### Create a new user named catalog that has limited permissions to your catalog application database
 First create the new user:
-'''
+```
 sudo adduser catalog
-'''
+```
 Then switch to postgre user and connect to the database system:
 ```
 sudo su - postgres
@@ -214,7 +214,24 @@ To see the affects of these commands type `\du` then exit and logout of the post
 exit
 ```
 
-###  Install Git
+###  Install Git and clone the Catalog Web Application from GitHub
+Here's how to install Git, and configure it with name and email information:
+```
+sudo apt-get install git
+git config --global user.name "Ramin Halviatti"
+git config --global user.email "ramin@outlook.com"
+```
+Now you can clone any project from a repository. For example:
+```
+git clone https://github.com/Ramin8or/U_FS_P3-Catalog.git
+```
+According to [this answer](http://stackoverflow.com/questions/6142437/make-git-directory-web-inaccessible)
+you can make the GitHub repository inaccessible by placing a `.htaccess` at the root of your web server directory, e.g., 
+`/var/www/catalog/.htaccess` and placing the following line in it: 
+```
+RedirectMatch 404 /\.git
+```
+
 
 ###  Setup the Catalog App Project
 Install git, clone and setup your Catalog App project (from your GitHub repository from earlier in the Nanodegree program) so that it functions correctly when visiting your server’s IP address in a browser. Remember to set this up appropriately so that your .git directory is not publicly accessible via a browser!
