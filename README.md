@@ -202,7 +202,7 @@ By default remote connections are not allowed. You can verify that by opening th
 and verifying it using 
 [this article](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps).
 
-####  Create a new user named catalog that has limited permissions to your catalog application database
+####  Create a new user named catalog with limited permissions to database
 First create the Linux new user:
 ```
 sudo adduser catalog
