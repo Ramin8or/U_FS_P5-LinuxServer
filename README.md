@@ -1,13 +1,14 @@
 ####  U_FS_P5-LinuxServer
 
 ##  Introduction
-This document is a step-by-step description for configuring a Linux Web Server, to host a complete web application 
+This document describes steps required to configure a Linux Web Server, to host a complete web application, 
 running on a virtual server in Amazon’s Elastic Compute Cloud (EC2). The web application, the Catalog App, is hosted 
 on an Apache HTTP server running on Ubuntu.
 The database server is PostgreSQL running on the same VM. 
 The Catalog App is written in Python and requires Flask framework. The sources for Catalog App can be found 
-[in this repository](https://github.com/Ramin8or/U_FS_P3-Catalog). 
-
+[in this repository](https://github.com/Ramin8or/U_FS_P3-Catalog).
+Extra effort has been put in place to make all steps repeatable, using command lines, rather than editing and cut/paste.
+With a little more effort, the content of this document can turn into a shell script to stamp out the virtual Sever on a drop of a hat.
 This is the last project for Full-Stack Web Development Nanodegree from Udacity. 
 The assignment specifications for configuring the server are provided by Udacity in 
 [this link](https://docs.google.com/document/d/1J0gpbuSlcFa2IQScrTIqI6o3dice-9T7v8EDNjJDfUI/pub?embedded=true). 
@@ -39,8 +40,7 @@ ssh -i ~/.ssh/udacity_key.rsa root@IP_ADDRESS
 ##  Perform Basic Configuration
 
 ###  Create a new user named 'grader'
-Given that at this point we are logged in as root into the VM, there is no need to preceed commands with `sudo`. Later when we setup the grader account
-all commands will have `sudo` in front of them. Here's how to add a user called grader when logged in as the root account:
+At this point we are logged into the VM as root. So there is no need to preceed commands with `sudo`:
 ```
 adduser grader
 ```
