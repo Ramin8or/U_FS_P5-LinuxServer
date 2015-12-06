@@ -1,8 +1,13 @@
 ####  U_FS_P5-LinuxServer
 
 ##  Introduction
-This document is a step-by-step description for configuring a Linux Web Server, to host a complete web application whose source can be found 
+This document is a step-by-step description for configuring a Linux Web Server, to host a complete web application 
+running on a virtual server in Amazon’s Elastic Compute Cloud (EC2). The web application, the Catalog App, is hosted 
+on an Apache HTTP server running on Ubuntu.
+The database server is PostgreSQL running on the same VM. 
+The Catalog App is written in Python and requires Flask framework. The sources for Catalog App can be found 
 [in this repository](https://github.com/Ramin8or/U_FS_P3-Catalog). 
+
 This is the last project for Full-Stack Web Development Nanodegree from Udacity. 
 The assignment specifications for configuring the server are provided by Udacity in 
 [this link](https://docs.google.com/document/d/1J0gpbuSlcFa2IQScrTIqI6o3dice-9T7v8EDNjJDfUI/pub?embedded=true). 
@@ -12,7 +17,11 @@ Links to additional material is provided where applicable.
 
 
 ##  Getting Started
-The IP_ADDRESS assigned to the Virtual Machine Server for this project is: `52.33.77.87`. 
+*  The IP_ADDRESS assigned to the Virtual Machine Server for this project is: `52.33.77.87`. 
+*  The complete URL to the hosted web application: 
+[http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/](http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/)
+
+
 Steps to SSH to the Virtual Machine with a Udacity account were provided as follows:
 
 *  On local host machine go to [your development environment](https://www.udacity.com/account#!/development_environment)
@@ -50,7 +59,11 @@ apt-get update
 apt-get upgrade
 ```
 **Note:** You will have to confirm “yes” when running the upgrade command.
-
+To automatically install stable unattended upgrades follow these steps as well:
+```
+apt-get install unattended-upgrades
+dpkg-reconfigure -plow unattended-upgrades
+```
 ###  Configure the local timezone to UTC
 [From Ubuntu Community:](https://help.ubuntu.com/community/UbuntuTime#Using_the_Command_Line_.28unattended.29)
 ```
@@ -254,7 +267,7 @@ I followed
 to deploy a flask application on Ubuntu. Note that we already setup Apache with mod_wsgi above. 
 This section provides all the steps involved to setup the Catalog Application.
 
-#### Create a Python Virtualenv Environment:
+####  Create a Python Virtualenv Environment:
 Using the following commands we will create a 
 [Python virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
 and install the necessary modules in our virtual evironment:
@@ -265,7 +278,8 @@ sudo pip install virtualenv
 sudo virtualenv venv
 sudo chmod -R 777 venv
 ```
-Install necessary modules for the Catalog Application. These will be installed within the Python Virtual Environment venv created earlier:
+####  Install necessary modules for the Catalog Application 
+These will be installed within the Python Virtual Environment venv created earlier:
 ```
 source venv/bin/activate
 pip install httplib2
@@ -274,7 +288,7 @@ pip install oauth2client
 pip install sqlalchemy
 pip install psycopg2
 ```
-Create a virtual host config file:
+####  Create a virtual host config file:
 ```
 sudo nano /etc/apache2/sites-available/catalog.conf
 ```
@@ -314,52 +328,48 @@ Enable Apache Virtual Host for catalog and restart:
 sudo a2ensite catalog
 sudo service apache2 restart
 ```
-
-####  Make changes to the Catalog Application sources
-1  Change this line in database_setup.py project.py and populate.py
-```
-engine = create_engine('postgresql://catalog:CATALOG_PASSWORD@localhost/catalog')
-```
-1  This line in project.py in two places:
-```
-CLIENT_ID = json.loads(
-    open('/var/www/catalog/catalog/client_secrets.json', 'r').read())['web']['client_id']
-```
-see  http://stackoverflow.com/questions/26080872/secret-key-not-set-in-flask-session
-1   Change this line in project.py
-```
-UPLOAD_FOLDER = '/var/www/catalog/catalog/static/'
-```
-1  At the bottom of project.py main app should look like this:
-```
-# Main application
-app.secret_key = 'super_secret_key'
-app.debug = True
-```
-
-1  Copy files to www directory
+####  Copy Catalog App over to the HTTP server directory
 ```
 mv project.py __init__.py
 sudo cp -r ~/U_FS_P3-Catalog/vagrant/catalog/* /var/www/catalog/catalog/
 ```
-1  Setup database tables and populate them
+####  Setup database tables and populate them
 ```
 cd /var/www/catalog/catalog/
 python database_setup.py
 python populate_db.py
 ```
-
-1  Look at the error logs to fix other issues
+At this point the Catalog App is positioned to run. Try the app and correct any errors by looking at the error logs:
 ```
 sudo tail -50 /var/log/apache2/error.log
 ```
+The next section describes the changes I had to make to get the Catalog App fully functional.
 
-1  Google authorization:
-Go Developer Console: `https://console.developers.google.com`
-Find the Catalog Application Project Credentials.
+####  Necessary changes to the Catalog Application sources
+1. `create_engine()` usage should reflect the fact that PostgreSQL is being used
+Change to this line in database_setup.py, project.py, and populate.py:
+```
+engine = create_engine('postgresql://catalog:CATALOG_PASSWORD@localhost/catalog')
+```
 
+1. Replace all relative paths with absolute paths:
+```
+CLIENT_ID = json.loads(
+    open('/var/www/catalog/catalog/client_secrets.json', 'r').read())['web']['client_id']
 
-Under Authorized JavaScript origins add your IP address and hostname URL:
+UPLOAD_FOLDER = '/var/www/catalog/catalog/static/'
+```
+
+1. The main application at the the bottom of project.py file should look like this:
+```
+# Main application
+app.secret_key = 'YOUR SECRET'
+app.debug = True
+```
+
+1.  Google authorization changes
+Go Developer Console: `https://console.developers.google.com` and find the Catalog Application Project Credentials.
+Under Authorized JavaScript origins, add your IP address and hostname URL:
 ```
 http://52.33.77.87
 http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com
