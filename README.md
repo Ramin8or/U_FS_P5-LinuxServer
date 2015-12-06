@@ -298,7 +298,7 @@ Insert the following lines in the file (replace with your specific information):
 	LogLevel warn
 	CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
-
+```
 Now create the wsgi file by pasting the following lines in a file called `/var/www/catalog/catalog.wsgi`:
 ```
 #!/usr/bin/python
