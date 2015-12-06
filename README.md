@@ -23,20 +23,11 @@ Links to additional material is provided where applicable.
 *  The IP_ADDRESS assigned to the Virtual Machine Server for this project is: `52.33.77.87`. 
 *  The complete URL to the hosted web application: 
 [http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/](http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/)
+*  SSH port (additional information will be in reviewer notes)
+```
+ssh -p 2200 -i ~/.ssh/u_p5_rsa  grader@52.33.77.87
+```
 
-Steps to SSH to the Virtual Machine with a Udacity account were provided as follows:
-
-*  On local host machine go to [your development environment](https://www.udacity.com/account#!/development_environment)
-*  Download the private key file
-*  Save the private key to your local .ssh directory and change access rights:
-```
-mv ~/Downloads/udacity_key.rsa ~/.ssh/
-chmod 600 ~/.ssh/udacity_key.rsa
-```
-*  Remote login to the server VM using the private key:
-```
-ssh -i ~/.ssh/udacity_key.rsa root@IP_ADDRESS
-```
 ##  Perform Basic Configuration
 
 ####  Create a new user named 'grader'
