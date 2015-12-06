@@ -109,7 +109,8 @@ Make sure to also set the proper access rights on the public key for the VM as f
 chmod 700 .ssh
 chmod 644 .ssh/authorized_keys
 ```
-Change these lines back in `/etc/ssh/sshd_config` for the VM using `sudo nano /etc/ssh/sshd_config`:
+Change these lines back in `/etc/ssh/sshd_config` for the VM using `sudo nano 
+`:
 ```
 PasswordAuthentication no
 PermitRootLogin no
@@ -135,10 +136,9 @@ sudo ufw allow 123/udp
 ```
 
 ## Install your application
+The application is a Python Flask Web Application which will use a PostgreSQL database. First we will install Apache HTTP server. Then we will configure it to serve Python Flask Applications. Next we'll setup the PostgreSQL database server. Finally, we'll adapt the Catalog Application to run on the full stack running on our Linux server.
 
-###  Install Apache, Python, and PostgreSQL
-
-####  Install and configure Apache to serve a Python mod_wsgi application
+###  Install and configure Apache to serve a Python mod_wsgi application
 Install Apache web server:
 ```
 sudo apt-get install apache2
@@ -148,32 +148,38 @@ You should see 'It works!' on top of the web page.
 
 According to [this Udacity blog](http://blog.udacity.com/2015/03/step-by-step-guide-install-lamp-linux-apache-mysql-python-ubuntu.html)
 there is an additional step to ensure that Apache and Python play well together nicely: installing a tool called **mod_wsgi**. 
-This is free tool for serving Python applications from Apache server. We will also be installing a helper package called **python-setuptools**.
+This is free tool for serving Python applications from Apache server. We will also be installing Flask and other helper packages 
+that will be required to setup our Catalog Application later:
 ```
-sudo apt-get install python-setuptools libapache2-mod-wsgi
-```
-Now is the time to restart the Apache web server in order to load mod_wsgi:
-```
+sudo apt-get install python-setuptools libapache2-mod-wsgi python-dev
+sudo apt-get install libpq-dev
+sudo a2enmod wsgi
+sudo apt-get install python-pip 
+sudo pip install Flask
 sudo service apache2 restart
 ```
-Use the information from [this answer](http://askubuntu.com/questions/256013/could-not-reliably-determine-the-servers-fully-qualified-domain-name) 
-to eliminate the friendly warning when restarting Apache: 
+Couple of tricks to quiet down annoying "friendly warnings." First, I used information from 
+[this answer](http://askubuntu.com/questions/256013/could-not-reliably-determine-the-servers-fully-qualified-domain-name) 
+to eliminate the friendly warning when restarting Apache. Here's the command I came up with to simply append a ServerName to the end of the Apache Config:
 ```
-sudo nano /etc/apache2/apache2.conf
+echo "ServerName localhost" | sudo tee -a /etc/apache2/apache2.conf
 ```
-And add the following at the end of this file:
+Also, 
+based on [this answer](http://askubuntu.com/questions/59458/error-message-when-i-run-sudo-unable-to-resolve-host-none)
+the top of the `/etc/hosts` file should include this information:
 ```
-# Introduce a servername to eliminate friendly warning
-ServerName localhost
+127.0.0.1    localhost.localdomain localhost
+127.0.1.1    my-machine
 ```
+where my-machine is the name found inside `/etc/hostname`.
 
-####  Install and configure PostgreSQL
+###  Install and configure PostgreSQL
 I used [this tutorial from DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps)
 to install and secure PostgreSQL. First install Postgre:
 ```
 sudo apt-get install postgresql postgresql-contrib
 ```
-At this point, PostgreSQL has created a new user that you can use to connect to the database server as follows:
+PostgreSQL creates a new user that you can use to connect to the database server as follows:
 ```
 sudo su - postgres
 psql
@@ -186,15 +192,14 @@ exit
 Since we are installing the web server and database server on the same machine, there is no need to modify any firewall settings. 
 The web server will communicate with the database via an internal mechanism that does not cross the boundaries of the firewall. 
 
-##### Do not allow remote connections
-By default remote connections are not allowed. You can verify that by opening this file:
-```
-sudo nano /etc/postgresql/9.3/main/pg_hba.conf
-```
-and verifying that using [this article](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps).
+####  Do not allow remote connections
+By default remote connections are not allowed. You can verify that by opening this file: 
+`/etc/postgresql/9.3/main/pg_hba.conf`
+and verifying it using 
+[this article](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps).
 
-##### Create a new user named catalog that has limited permissions to your catalog application database
-First create the new user:
+####  Create a new user named catalog that has limited permissions to your catalog application database
+First create the Linux new user:
 ```
 sudo adduser catalog
 ```
@@ -203,12 +208,16 @@ Then switch to postgre user and connect to the database system:
 sudo su - postgres
 psql
 ```
-Use the following commands to create catalog user and give it roles in the database system:
+Use the following commands to create catalog user with appropriate roles and create the catalog database:
 ```
-CREATE USER catalog WITH PASSWORD 'password';
+CREATE USER catalog WITH PASSWORD 'catalog';
 ALTER USER catalog CREATEDB;
+CREATE DATABASE catalog WITH OWNER catalog;
+\c catalog
+REVOKE ALL ON SCHEMA public FROM public;
+GRANT ALL ON SCHEMA public TO catalog;
 ```
-To see the affects of these commands type `\du` then exit and logout of the postgre account:
+Finally, exit and logout of the postgre account:
 ```
 \q
 exit
@@ -218,20 +227,144 @@ exit
 Here's how to install Git, and configure it with name and email information:
 ```
 sudo apt-get install git
-git config --global user.name "Ramin Halviatti"
-git config --global user.email "ramin@outlook.com"
+git config --global user.name "Firstname Lastname"
+git config --global user.email "EmailId@somewhere.com"
 ```
 Now you can clone any project from a repository. For example:
 ```
 git clone https://github.com/Ramin8or/U_FS_P3-Catalog.git
 ```
+Setup the directory structure where the Catalog Application will be served from:
+```
+sudo mkdir /var/www/catalog
+sudo mkdir /var/www/catalog/catalog
+```
 According to [this answer](http://stackoverflow.com/questions/6142437/make-git-directory-web-inaccessible)
-you can make the GitHub repository inaccessible by placing a `.htaccess` at the root of your web server directory, e.g., 
-`/var/www/catalog/.htaccess` and placing the following line in it: 
+you can make the GitHub repository inaccessible by placing a `.htaccess` at the root of your web server directory. 
+Here's how to do that using the command line:
 ```
-RedirectMatch 404 /\.git
+sudo touch /var/www/catalog/.htaccess
+echo "RedirectMatch 404 /\.git" | sudo tee /var/www/catalog/.htaccess
 ```
-
 
 ###  Setup the Catalog App Project
-Install git, clone and setup your Catalog App project (from your GitHub repository from earlier in the Nanodegree program) so that it functions correctly when visiting your server’s IP address in a browser. Remember to set this up appropriately so that your .git directory is not publicly accessible via a browser!
+Given that the Catalog App is a Flask application, 
+I followed 
+[this tutorial from DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps)
+to deploy a flask application on Ubuntu. Note that we already setup Apache with mod_wsgi above. 
+This section provides all the steps involved to setup the Catalog Application.
+
+#### Create a Python Virtualenv Environment:
+Using the following commands we will create a 
+[Python virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
+and install the necessary modules in our virtual evironment:
+
+```
+cd /var/www/catalog/catalog
+sudo pip install virtualenv
+sudo virtualenv venv
+sudo chmod -R 777 venv
+```
+Install necessary modules for the Catalog Application. These will be installed within the Python Virtual Environment venv created earlier:
+```
+source venv/bin/activate
+pip install httplib2
+pip install requests
+pip install oauth2client
+pip install sqlalchemy
+pip install psycopg2
+```
+Create a virtual host config file:
+```
+sudo nano /etc/apache2/sites-available/catalog.conf
+```
+Insert the following lines in the file (replace with your specific information):
+```
+<VirtualHost *:80>
+	ServerName 52.33.77.87  
+	ServerAlias ec2-52-33-77-87.us-west-2.compute.amazonaws.com
+	ServerAdmin ramin@outlook.com
+	WSGIScriptAlias / /var/www/catalog/catalog.wsgi
+	<Directory /var/www/catalog/catalog/>
+		Order allow,deny
+		Allow from all
+ 	</Directory>
+	Alias /static /var/www/catalog/catalog/static
+	<Directory /var/www/catalog/catalog/static/>
+		Order allow,deny
+		Allow from all
+	</Directory>
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	LogLevel warn
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+Now create the wsgi file by pasting the following lines in a file called `/var/www/catalog/catalog.wsgi`:
+```
+#!/usr/bin/python
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0,"/var/www/catalog/")
+
+from catalog import app as application
+```
+Enable Apache Virtual Host for catalog and restart: 
+```
+sudo a2ensite catalog
+sudo service apache2 restart
+```
+
+####  Make changes to the Catalog Application sources
+1  Change this line in database_setup.py project.py and populate.py
+```
+engine = create_engine('postgresql://catalog:CATALOG_PASSWORD@localhost/catalog')
+```
+1  This line in project.py in two places:
+```
+CLIENT_ID = json.loads(
+    open('/var/www/catalog/catalog/client_secrets.json', 'r').read())['web']['client_id']
+```
+see  http://stackoverflow.com/questions/26080872/secret-key-not-set-in-flask-session
+1   Change this line in project.py
+```
+UPLOAD_FOLDER = '/var/www/catalog/catalog/static/'
+```
+1  At the bottom of project.py main app should look like this:
+```
+# Main application
+app.secret_key = 'super_secret_key'
+app.debug = True
+```
+
+1  Copy files to www directory
+```
+mv project.py __init__.py
+sudo cp -r ~/U_FS_P3-Catalog/vagrant/catalog/* /var/www/catalog/catalog/
+```
+1  Setup database tables and populate them
+```
+cd /var/www/catalog/catalog/
+python database_setup.py
+python populate_db.py
+```
+
+1  Look at the error logs to fix other issues
+```
+sudo tail -50 /var/log/apache2/error.log
+```
+
+1  Google authorization:
+Go Developer Console: `https://console.developers.google.com`
+Find the Catalog Application Project Credentials.
+
+
+Under Authorized JavaScript origins add your IP address and hostname URL:
+```
+http://52.33.77.87
+http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com
+```
+Under Authorized redirect URIs
+```
+http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/oauth2callback
+```
