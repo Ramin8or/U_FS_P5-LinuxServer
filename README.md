@@ -7,8 +7,10 @@ on an Apache HTTP server running on Ubuntu.
 The database server is PostgreSQL running on the same VM. 
 The Catalog App is written in Python and requires Flask framework. The sources for Catalog App can be found 
 [in this repository](https://github.com/Ramin8or/U_FS_P3-Catalog).
+
 Extra effort has been put in place to make all steps repeatable, using command lines, rather than editing and cut/paste.
 With a little more effort, the content of this document can turn into a shell script to stamp out the virtual Sever on a drop of a hat.
+
 This is the last project for Full-Stack Web Development Nanodegree from Udacity. 
 The assignment specifications for configuring the server are provided by Udacity in 
 [this link](https://docs.google.com/document/d/1J0gpbuSlcFa2IQScrTIqI6o3dice-9T7v8EDNjJDfUI/pub?embedded=true). 
@@ -21,7 +23,6 @@ Links to additional material is provided where applicable.
 *  The IP_ADDRESS assigned to the Virtual Machine Server for this project is: `52.33.77.87`. 
 *  The complete URL to the hosted web application: 
 [http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/](http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/)
-
 
 Steps to SSH to the Virtual Machine with a Udacity account were provided as follows:
 
@@ -36,23 +37,20 @@ chmod 600 ~/.ssh/udacity_key.rsa
 ```
 ssh -i ~/.ssh/udacity_key.rsa root@IP_ADDRESS
 ```
-
 ##  Perform Basic Configuration
 
-###  Create a new user named 'grader'
+####  Create a new user named 'grader'
 At this point we are logged into the VM as root. So there is no need to preceed commands with `sudo`:
 ```
 adduser grader
 ```
-
-###  Give the 'grader' the permission to sudo
+####  Give the 'grader' the permission to sudo
 Create a file under `/etc/sudoers.d` with this content: ```grader ALL=(ALL) NOPASSWD:ALL``` and proper access rights. Use these commands:
 ```
 echo "grader ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/grader
 chmod 440 /etc/sudoers.d/grader
 ```
-
-###  Update all currently installed packages
+####  Update all currently installed packages
 First update, then upgrade with the following two commands:
 ```
 apt-get update
@@ -64,16 +62,15 @@ To automatically install stable unattended upgrades follow these steps as well:
 apt-get install unattended-upgrades
 dpkg-reconfigure -plow unattended-upgrades
 ```
-###  Configure the local timezone to UTC
+####  Configure the local timezone to UTC
 [From Ubuntu Community:](https://help.ubuntu.com/community/UbuntuTime#Using_the_Command_Line_.28unattended.29)
 ```
 echo "Etc/UTC" | sudo tee /etc/timezone
 sudo dpkg-reconfigure --frontend noninteractive tzdata
 ```
-
 ##  Secure your Server
 
-### Change the SSH port from 22 to 2200
+#### Change the SSH port from 22 to 2200
 First preserve factory defaults in a file as follows:
 ```
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config_defaults
@@ -92,7 +89,6 @@ PasswordAuthentication yes
 ```
 **Important note:** we're temporarily setting `PasswordAuthentication yes` to ensure that remote login works first.
 
-
 Save the file, and restart SSH:
 ```
 service ssh restart
@@ -101,11 +97,9 @@ service ssh restart
 ```
 ssh -p 2200 grader@`[IP_ADDRESS](52.33.77.87)
 ```
-
-###  Configure SSH key-based authentication
+####  Configure SSH key-based authentication
 We're going to create a public/private pair of keys based on this tutorial from 
 [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server).
-
 
 **On your local machine**, generate the keys under `~/.ssh` directory. Use `ssh-keygen`, and pass in a filename such as: 
 `/user/USER_NAME/.ssh/u_p5_rsa.pub`.
@@ -122,8 +116,7 @@ Make sure to also set the proper access rights on the public key for the VM as f
 chmod 700 .ssh
 chmod 644 .ssh/authorized_keys
 ```
-Change these lines back in `/etc/ssh/sshd_config` for the VM using `sudo nano 
-`:
+Change these lines back in `/etc/ssh/sshd_config` for the VM using `sudo nano`:
 ```
 PasswordAuthentication no
 PermitRootLogin no
@@ -136,8 +129,7 @@ Now you should be able to login to the server using:
 ```	
 ssh -p 2200 -i ~/.ssh/u_p5_rsa grader@IP_ADDRESS
 ```
-
-###  Configure the Uncomplicated Firewall (UFW) 
+####  Configure the Uncomplicated Firewall (UFW) 
 The goal is to only allow incoming connections for SSH (port 2200), HTTP (port 80), and NTP (port 123). I used the following commands
 provided in [Ubuntu Community Docs](https://help.ubuntu.com/community/UFW). 
 First I enabled ufw with the default rules. Then modified them as follows:
@@ -147,8 +139,7 @@ sudo ufw allow 2200/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 123/udp
 ```
-
-## Install your application
+##  Install your application
 The application is a Python Flask Web Application which will use a PostgreSQL database. First we will install Apache HTTP server. Then we will configure it to serve Python Flask Applications. Next we'll setup the PostgreSQL database server. Finally, we'll adapt the Catalog Application to run on the full stack running on our Linux server.
 
 ###  Install and configure Apache to serve a Python mod_wsgi application
@@ -235,7 +226,6 @@ Finally, exit and logout of the postgre account:
 \q
 exit
 ```
-
 ###  Install Git and clone the Catalog Web Application from GitHub
 Here's how to install Git, and configure it with name and email information:
 ```
@@ -259,7 +249,6 @@ Here's how to do that using the command line:
 sudo touch /var/www/catalog/.htaccess
 echo "RedirectMatch 404 /\.git" | sudo tee /var/www/catalog/.htaccess
 ```
-
 ###  Setup the Catalog App Project
 Given that the Catalog App is a Flask application, 
 I followed 
