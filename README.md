@@ -341,7 +341,7 @@ Change to this line in database_setup.py, project.py, and populate.py:
 engine = create_engine('postgresql://catalog:CATALOG_PASSWORD@localhost/catalog')
 ```
 
-1. Replace all relative paths with absolute paths:
+2. Replace all relative paths with absolute paths:
 ```
 CLIENT_ID = json.loads(
     open('/var/www/catalog/catalog/client_secrets.json', 'r').read())['web']['client_id']
@@ -349,14 +349,14 @@ CLIENT_ID = json.loads(
 UPLOAD_FOLDER = '/var/www/catalog/catalog/static/'
 ```
 
-1. The main application at the the bottom of project.py file should look like this:
+3. The main application at the the bottom of project.py file should look like this:
 ```
 # Main application
 app.secret_key = 'YOUR SECRET'
 app.debug = True
 ```
 
-1.  Google authorization changes
+4.  Google authorization changes
 Go Developer Console: `https://console.developers.google.com` and find the Catalog Application Project Credentials.
 Under Authorized JavaScript origins, add your IP address and hostname URL:
 ```
