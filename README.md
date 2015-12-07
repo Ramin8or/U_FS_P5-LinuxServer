@@ -61,7 +61,7 @@ sudo dpkg-reconfigure --frontend noninteractive tzdata
 ```
 ##  Secure your Server
 
-#### Change the SSH port from 22 to 2200
+#### Change the SSH port from 22 to 2200 (a non-default port)
 First preserve factory defaults in a file as follows:
 ```
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config_defaults
@@ -86,7 +86,7 @@ service ssh restart
 ```
 **Do not logout of root yet!** Use another terminal to SSH using the grader account:
 ```
-ssh -p 2200 grader@`[IP_ADDRESS](52.33.77.87)
+ssh -p 2200 grader@IP_ADDRESS
 ```
 ####  Configure SSH key-based authentication
 We're going to create a public/private pair of keys based on this tutorial from 
@@ -130,6 +130,31 @@ sudo ufw allow 2200/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 123/udp
 ```
+####  Monitor for repeated attempts to login
+[This tutorial from DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04)
+provides the step by step guide to prevent repeated SSH using  
+[fail2ban](http://www.fail2ban.org/wiki/index.php/Main_Page). 
+First install the necessary packages, and copy the config file to a local copy:
+```
+sudo apt-get install sendmail iptables-persistent
+sudo apt-get install fail2ban
+sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+```
+Open the local config file: `/etc/fail2ban/jail.local`. 
+
+Set batime to `bantime = 1800`
+
+Under section `[ssh]` set `port = 2200`
+
+Change `destmail =` line to where mail should be sent
+
+Change `action = ` line to `action = %(action_mwl)s`  
+Restart fail2ban service:
+```
+sudo service fail2ban stop
+sudo service fail2ban start
+```
+
 ##  Install your application
 The application is a Python Flask Web Application which will use a PostgreSQL database. First we will install Apache HTTP server. Then we will configure it to serve Python Flask Applications. Next we'll setup the PostgreSQL database server. Finally, we'll adapt the Catalog Application to run on the full stack running on our Linux server.
 
@@ -358,3 +383,13 @@ Under Authorized redirect URIs
 ```
 http://ec2-52-33-77-87.us-west-2.compute.amazonaws.com/oauth2callback
 ```
+
+###  Use [Glances](https://pypi.python.org/pypi/Glances) to monitor status of the server
+Follow these steps. Note that other required python packages have already been installed in previous steps:
+```
+sudo apt-get install build-essential
+sudo apt-get install lm-sensors
+sudo pip install Glances
+sudo pip install PySensors
+```
+You can type `glances` on the command line to monitor the server status at this point.
