@@ -272,6 +272,12 @@ I followed
 to deploy a flask application on Ubuntu. Note that we already setup Apache with mod_wsgi above. 
 This section provides all the steps involved to setup the Catalog Application.
 
+**Note:** The following image packages are required to use `python-resize-image`, and must be installed first:
+```
+sudo apt-get build-dep python-imaging
+sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
+sudo pip install python-resize-image
+```
 ####  Create a Python Virtualenv Environment:
 Using the following commands we will create a 
 [Python virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
