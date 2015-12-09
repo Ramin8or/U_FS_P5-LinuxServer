@@ -345,6 +345,7 @@ mv project.py __init__.py
 sudo cp -r ~/U_FS_P3-Catalog/vagrant/catalog/* /var/www/catalog/catalog/
 ```
 ####  Setup database tables and populate them
+First make sure the all *.py files use PostgreSQL in their call to `create_engine()` (see next section).
 ```
 cd /var/www/catalog/catalog/
 python database_setup.py
@@ -354,6 +355,12 @@ At this point the Catalog App is positioned to run. Try the app and correct any 
 ```
 sudo tail -50 /var/log/apache2/error.log
 ```
+To populate the database with 50,000 (or more) items, follow these steps:
+```
+cd /var/www/catalog/catalog/
+sudo cp pix/*jpg static/
+python more_items.py
+```
 The next section describes the changes I had to make to get the Catalog App fully functional.
 
 ####  Necessary changes to the Catalog Application sources
@@ -362,7 +369,6 @@ Change to this line in database_setup.py, project.py, and populate.py:
 ```
 engine = create_engine('postgresql://catalog:CATALOG_PASSWORD@localhost/catalog')
 ```
-
 2. Replace all relative paths with absolute paths:
 ```
 CLIENT_ID = json.loads(
@@ -370,15 +376,13 @@ CLIENT_ID = json.loads(
 
 UPLOAD_FOLDER = '/var/www/catalog/catalog/static/'
 ```
-
 3. The main application at the the bottom of project.py file should look like this:
 ```
 # Main application
 app.secret_key = 'YOUR SECRET'
 app.debug = True
 ```
-
-4.  Google authorization changes
+4. Google authorization changes
 Go Developer Console: `https://console.developers.google.com` and find the Catalog Application Project Credentials.
 Under Authorized JavaScript origins, add your IP address and hostname URL:
 ```
